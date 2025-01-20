@@ -1,31 +1,71 @@
+// Встановлення заголовка
 document.querySelector(".text").innerText += `To Do List`;
 
-document.querySelector("#push").onclick = function () {
-  if (document.querySelector("#newtask input").value.length == 0) {
-    alert("Please Enter a Tasks");
-  } else {
-    document.querySelector("#tasks").innerHTML += `
-            <div class="task">
-                <span id="taskname">
-                    ${document.querySelector("#newtask input").value}
-                </span>
-                <button class="delete">
-                <svg class="ico__delete" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--!Font Awesome Free 6.7.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.--><path d="M135.2 17.7C140.6 6.8 151.7 0 163.8 0L284.2 0c12.1 0 23.2 6.8 28.6 17.7L320 32l96 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 96C14.3 96 0 81.7 0 64S14.3 32 32 32l96 0 7.2-14.3zM32 128l384 0 0 320c0 35.3-28.7 64-64 64L96 512c-35.3 0-64-28.7-64-64l0-320zm96 64c-8.8 0-16 7.2-16 16l0 224c0 8.8 7.2 16 16 16s16-7.2 16-16l0-224c0-8.8-7.2-16-16-16zm96 0c-8.8 0-16 7.2-16 16l0 224c0 8.8 7.2 16 16 16s16-7.2 16-16l0-224c0-8.8-7.2-16-16-16zm96 0c-8.8 0-16 7.2-16 16l0 224c0 8.8 7.2 16 16 16s16-7.2 16-16l0-224c0-8.8-7.2-16-16-16z"/></svg>
-                </button>
-            </div>
-        `;
-    var current_tasks = document.querySelectorAll(".delete");
-    for (var i = 0; i < current_tasks.length; i++) {
-      current_tasks[i].onclick = function () {
-        this.parentNode.remove();
-      };
-    }
-  }
-  var tasks = document.querySelectorAll(".task");
-  for (var i = 0; i < tasks.length; i++) {
-    tasks[i].onclick = function () {
-      this.classList.toggle("completed");
+// Завантаження завдань із LocalStorage
+window.onload = function () {
+  const savedTasks = JSON.parse(localStorage.getItem("tasks")) || [];
+  savedTasks.forEach((task) => addTaskToDOM(task.text, task.completed));
+};
+
+// Додавання завдання до DOM
+function addTaskToDOM(taskText, isCompleted = false) {
+  const taskHTML = `
+        <div class="task ${isCompleted ? "completed" : ""}">
+            <span id="taskname">${taskText}</span>
+            <button class="delete">
+                <svg class="ico__delete" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
+                  <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
+                  <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
+                </svg>
+            </button>
+        </div>
+    `;
+  document.querySelector("#tasks").innerHTML += taskHTML;
+
+  updateEventListeners();
+  saveTasksToLocalStorage();
+}
+
+// Оновлення завдань у LocalStorage
+function saveTasksToLocalStorage() {
+  const tasks = [];
+  document.querySelectorAll(".task").forEach((task) => {
+    tasks.push({
+      text: task.querySelector("#taskname").innerText,
+      completed: task.classList.contains("completed"),
+    });
+  });
+  localStorage.setItem("tasks", JSON.stringify(tasks));
+}
+
+// Додавання обробників подій
+function updateEventListeners() {
+  const deleteButtons = document.querySelectorAll(".delete");
+  deleteButtons.forEach((button) => {
+    button.onclick = function () {
+      this.parentNode.remove();
+      saveTasksToLocalStorage();
     };
+  });
+
+  const tasks = document.querySelectorAll(".task");
+  tasks.forEach((task) => {
+    task.onclick = function () {
+      this.classList.toggle("completed");
+      saveTasksToLocalStorage();
+    };
+  });
+}
+
+// Обробка натискання кнопки "Add"
+document.querySelector("#push").onclick = function () {
+  const taskInput = document.querySelector("#newtask input");
+  const taskText = taskInput.value.trim();
+
+  if (taskText.length === 0) {
+    alert("Please Enter a Task");
+  } else {
+    addTaskToDOM(taskText);
+    taskInput.value = "";
   }
-  document.querySelector("#newtask input").value = "";
 };
